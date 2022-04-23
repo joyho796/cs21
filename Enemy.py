@@ -1,12 +1,12 @@
-import Item
+from Item import *
 
 class Enemy:
     Name = ""
     Description = ""
-    DescriptionDict = {"Placeholder1": "Your basic grunt. Nothing to worry about",
-                       "Placeholder2": "Having fed on the other creatures for years now, this one packs a punch."}
+    DescriptionDict = {"E1": "Your basic grunt. Nothing to worry about",
+                       "E2": "Having fed on the other creatures for years now, this one packs a punch."}
     MaxDamage = 0
-    DroppedItem = Item()
+    DroppedItem = None
     HP = 100
 
     def __init__(self, Name, MaxDamage, DroppedItem):
