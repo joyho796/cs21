@@ -1,13 +1,12 @@
-import Item
+from Item import *
 
 class Enemy:
     Name = ""
     Description = ""
-    DescriptionDict = {"Placeholder1": "Your basic grunt. Nothing to worry about",
-                       "Placeholder2": "Having fed on the other creatures for years now, this one packs a punch."}
+    DescriptionDict = {"E1": "Your basic grunt. Nothing to worry about",
+                       "E2": "Having fed on the other creatures for years now, this one packs a punch."}
     MaxDamage = 0
-    # if we want enemies to drop items
-    DroppedItem = Item()
+    DroppedItem = None
     HP = 100
 
     def __init__(self, Name, MaxDamage, DroppedItem):
@@ -16,7 +15,6 @@ class Enemy:
         self.MaxDamage = MaxDamage
         self.DroppedItem = DroppedItem
 
-    # decrements the enemy's HP by a given amount
     def takeDamage(self, attackVal):
         self.HP = self.HP - attackVal
 
