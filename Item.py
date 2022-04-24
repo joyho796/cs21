@@ -23,4 +23,13 @@ class Item:
         self.Description = self.DescriptionDict[Name]
         self.isWeapon = self.isWeaponDict[Name]
         self.MaxDamage = self.DamageDict[Name]
+
+    def getName(self):
+        return self.Name
+
+    def getDescription(self):
+        return self.Description
+    
+    def getMaxDamage(self):
+        return self.MaxDamage
         
