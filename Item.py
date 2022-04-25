@@ -29,7 +29,12 @@ class Item:
 
     def getDescription(self):
         return self.Description
-    
+
     def getMaxDamage(self):
         return self.MaxDamage
-        
+
+    def getDescription(self, itemName):
+        return DescriptionDict[itemName]
+
+    def getDamage(itemName):
+        return DamageDict[itemName]
