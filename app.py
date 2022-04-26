@@ -1,6 +1,7 @@
 import asyncio
 import websockets
 from Dungeon import *
+import time
 
 # debugging needs:
 # make sure there are no duplicate usernames, and only send to users with
@@ -66,6 +67,18 @@ async def server(websocket, path):
             # get users added by userName
             if (command == "name"):
                 await addUser(websocket, elements[1])
+# =======
+#                 clients[websocket] = elements[1]
+#                 for conn in connected:
+#                     if conn != websocket:
+#                         await conn.send(f">>> {elements[1]} has entered the dungeon. ")
+#                     else:
+#                         await conn.send(f">>> Welcome to the dungeon, {elements[1]}!")
+#                         introMessage = dungeon.getIntro()
+#                         time.sleep(1)
+#                         await conn.send(f">>> {introMessage}")
+#                 dungeon.addPlayer(elements[1])
+# >>>>>>> Stashed changes
 
             # send messages to all dungeon clients
             elif (command == "chat"):

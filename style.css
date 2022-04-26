@@ -1,0 +1,68 @@
+body {
+    font-family: 'JetBrains Mono', monospace;
+    width: 100vw;
+    height: 100vh;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    text-align: center;
+    align-items: center;
+    background-color: #1b1c18;
+}
+
+#content {
+    border: 8px solid rgba(0,0,0,0.5);
+    background-color: #192713;
+    color: #89b96c;
+    box-shadow: inset 0 0 500px rgba(0,0,0,0.3);
+    text-shadow: 0px 0px 8px #548144;
+    width: 66vw;
+    height: 66vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    gap: 4px;
+    padding: 12px;
+    border-radius: 12px;
+}
+
+form {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+}
+
+#name {
+    font-size: 18px;
+}
+
+input[type=text] {
+    -webkit-appearance: none;
+    border: none;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 18px;
+    width: calc(100% - 4px);
+    background-color: rgba(0,0,0,0);
+    color: #89b96c;
+    text-shadow: 0px 0px 8px #548144;
+    flex: 1;
+}
+
+input[type=text]:focus {
+    outline: none;
+    border: none;
+}
+
+#messages {
+    font-size: 18px;
+    gap: 4px;
+    display: flex;
+    text-align: left;
+    flex-direction: column-reverse;
+    justify-content: flex-start;
+    overflow-y: scroll;
+    text-align: left;
+    margin-bottom: 4px;
+}
