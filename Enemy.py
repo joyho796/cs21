@@ -1,22 +1,21 @@
 from Item import *
 
 class Enemy:
-    Name = ""
-    Description = ""
-    DescriptionDict = {"E1": "Your basic grunt. Nothing to worry about",
-                       "E2": "Having fed on the other creatures for years now, this one packs a punch."}
-    MaxDamage = 0
-    DroppedItem = None
-    HP = 100
-
-    def __init__(self, Name, MaxDamage, DroppedItem):
+    def __init__(self, Name, Dict, DroppedItems):
         self.Name = Name
-        self.Description = self.DescriptionDict[Name]
-        self.MaxDamage = MaxDamage
-        self.DroppedItem = DroppedItem
+        self.Description = Dict["description"]
+        self.MaxDamage = Dict["maxDamage"]
+        self.MinDamage = Dict["minDamage"]
+        self.HP = Dict["hp"]
+        self.DroppedItems = DroppedItems
 
     def takeDamage(self, attackVal):
         self.HP = self.HP - attackVal
+
+        if self.HP < 1:
+            return "dead"
+        else:
+            return "alive"
 
     def getName(self):
         return self.Name
@@ -26,7 +25,9 @@ class Enemy:
 
     def getMaxDamage(self):
         return self.MaxDamage
-    
+
     def getHP(self):
         return self.HP
-        
+
+    def getItems(self):
+        return self.DroppedItems

@@ -2,22 +2,65 @@ from Room import *
 from Enemy import *
 
 class Dungeon:
+
+    ITEMDICT = {
+        "Knife" : {
+            "description" : "A small penknife. Honestly, it's better suited for whittling than combat. ",
+            "minRoll" : 2,
+            "maxRoll" : 8,
+            "isWeapon" : True
+        },
+        "Sword" : {
+            "description" : "An ordinary sword. Though it's been long since its glory days, the blade remains sharp.",
+            "minRoll" : 5,
+            "maxRoll" : 20,
+            "isWeapon" : True
+        },
+        "Dagger" : {
+            "description" : "An assassins dagger. Chips have begun to form along its edge, but it remains a trusty tool.",
+            "minRoll" : 12,
+            "maxRoll" : 15,
+            "isWeapon" : False
+        },
+        "Potion" : {
+            "description" : "A healing potion. It says healing on the red bottle, so it should be fine, right?",
+            "minRoll" : 15,
+            "maxRoll" : 20,
+            "isWeapon" : False
+        }
+    }
+
+    ENEMYDICT = {
+        "Grunt" : {
+            "description" : "Your basic grunt. Nothing to worry about",
+            "maxDamage" : 10,
+            "minDamage" : 5,
+            "hp" : 20
+        },
+        "Ooze" : {
+            "description" : "Having fed on the other creatures for years now, this one packs a punch.",
+            "maxDamage" : 20,
+            "minDamage" : 15,
+            "hp" : 30
+        }
+    }
+
     def __init__(self):
         self.players = {}
         self.rooms = [Room("Entrance", None, "06", None, "01", [], []), \
                       Room("01", "02", "Entrance", "08", None, [], []), \
-                      Room("02", None, "03", "01", None, [Item("Dagger"), Item("Dagger"), Item("Potion")], [Enemy("E1", 1, None)]), \
-                      Room("03", "11", "04", None, "02", [Item("Dagger")], [Enemy("E1", 2, Item("Potion"))]), \
-                      Room("04", None, "05", "06", "03", [Item("Potion")], [Enemy("E1", 4, Item("Sword"))]), \
-                      Room("05", None, None, None, "04", [Item("Potion"), Item("Sword")], [Enemy("E2", 6, Item("Sword"))]), \
-                      Room("06", "04", None, "07", "Entrance", [], [Enemy("E1", 1, Item("Potion"))]), \
-                      Room("07", "06", None, None, None, [], [Enemy("E1", 3, Item("Sword"))]), \
-                      Room("08", "01", "09", "10", None, [Item("Dagger")], []), \
-                      Room("09", None, None, None, "08", [], [Enemy("E2", 7, Item("Potion"))]), \
-                      Room("10", "08", None, None, None, [], [Enemy("E2", 10, Item("Potion"))]), \
-                      Room("11", "13", None, "03", "12", [Item("Potion"), Item("Sword")], []), \
-                      Room("12", None, "11", None, None, [], [Enemy("E2", 6, Item("Potion"))]),
-                      Room("13", None, None, "03", None, [], [Enemy("E2", 16, Item("Potion"))])]
+                      Room("02", None, "03", "01", None, ["Dagger", "Dagger", "Potion"], [Enemy("Grunt", self.ENEMYDICT["Grunt"], [])]), \
+                      Room("03", "11", "04", None, "02", ["Dagger"], [Enemy("Grunt", self.ENEMYDICT["Grunt"], ["Potion"])]), \
+                      Room("04", None, "05", "06", "03", ["Potion"], [Enemy("Grunt", self.ENEMYDICT["Grunt"], ["Sword"])]), \
+                      Room("05", None, None, None, "04", ["Potion", "Sword"], [Enemy("Ooze", self.ENEMYDICT["Ooze"], ["Sword"])]), \
+                      Room("06", "04", None, "07", "Entrance", [], [Enemy("Grunt", self.ENEMYDICT["Grunt"], ["Potion"])]), \
+                      Room("07", "06", None, None, None, [], [Enemy("Grunt", self.ENEMYDICT["Grunt"], ["Sword"])]), \
+                      Room("08", "01", "09", "10", None, ["Dagger"], []), \
+                      Room("09", None, None, None, "08", [], [Enemy("Ooze", self.ENEMYDICT["Ooze"], ["Potion"])]), \
+                      Room("10", "08", None, None, None, [], [Enemy("Ooze", self.ENEMYDICT["Ooze"], ["Potion"])]), \
+                      Room("11", "13", None, "03", "12", ["Potion", "Sword"], []), \
+                      Room("12", None, "11", None, None, [], [Enemy("Ooze", self.ENEMYDICT["Ooze"], ["Potion"])]),
+                      Room("13", None, None, "03", None, [], [Enemy("Ooze", self.ENEMYDICT["Ooze"], ["Potion"])])]
 
     ##########################################################################
     # Given the name of a room, returns its index in the room array
@@ -67,11 +110,11 @@ class Dungeon:
 
         elif message[0] == "look":
             desc = []
-            desc.append("======== Room [" + room.roomName + "] ========")
+            desc.append("========== Room [" + room.roomName + "] ==========")
             desc.append("| Enemies present: " + str(len(room.enemies)))
             desc.append("| Items present: " + str(len(room.items)))
             desc.append("| Rooms adjacent: " + str(room.countAdjacent()))
-            desc.append("==========================")
+            desc.append("=========================")
             # This would be a list of strings sent back to the player
             return(desc)
 
@@ -102,47 +145,26 @@ class Dungeon:
                     self.players[player] = self.getRoomIndex(adjacent[3])
                     return adjacent[3]
             else:
-                # This would be a string sent back to the player
+                # for debugging
                 return("Could not interpret that command.")
 
         elif message[0] == "get":
-            if message[1] == "Sword":
-                print("Acquired Sword") if room.hasItem("Sword") \
-                else print("There's no Sword here")
-            elif message[1] == "Dagger":
-                print("Acquired Dagger") if room.hasItem("Dagger") \
-                else print("There's no Dagger here")
-            elif message[1] == "Potion":
-                print("Acquired Potion") if room.hasItem("Potion") \
-                else print("There's no Potion here")
+            if message[1] in self.ITEMDICT:
+                if room.hasItem(message[1]):
+                    room.removeItem(message[1])
+                    return message[1]
+                else:
+                    return "Item not in room. "
             else:
-                print("Could not understand message")
+                return "Item not recognized. "
 
         elif message[0] == "info":
-            return(Item(message[1]).Description)
+            if (message[1] in self.ITEMDICT):
+                return self.ITEMDICT[message[1]]["description"]
+            else:
+                return "Given item not recognized."
 
         elif message[0] == "drink":
-            pass
-
-## Testing
-#if __name__ == "__main__":
-    #dungeon = Dungeon()
-    #dungeon.addPlayer("one")
-    #dungeon.addPlayer("two")
-    #dungeon.removePlayer("two")
-    #dungeon.listPlayers()
-    #dungeon.handleMessage("player", "attack", 2)
-    #dungeon.handleMessage("player", "attack", 1)
-    #dungeon.handleMessage("player", "look", 2)
-    #dungeon.handleMessage("player", "look", 11)
-    #dungeon.handleMessage("player", "move,north", 11)
-    #dungeon.handleMessage("player", "move,east", 11)
-    #dungeon.handleMessage("player", "move,south", 11)
-    #dungeon.handleMessage("player", "help", 11)
-    #dungeon.handleMessage("player", "get,Sword", 11)
-    #dungeon.handleMessage("player", "get,Sword", 4)
-    #dungeon.handleMessage("player", "get,Potion", 4)
-    #dungeon.handleMessage("player", "info,Potion", 4)
-
-    #def listPlayers(self):
-    #    print("Players in dungeon: ", self.players)
+            minRoll = self.ITEMDICT[message[1]]["minRoll"]
+            maxRoll = self.ITEMDICT[message[1]]["maxRoll"]
+            return random.randint(minRoll, maxRoll)

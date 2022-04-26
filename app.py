@@ -92,16 +92,28 @@ async def server(websocket, path):
                 for line in reversed(result):
                     await websocket.send(f">>> {line}")
 
+            elif (command == "info"):
+                result = dungeon.handleMessage(clients[websocket], message)
+                await websocket.send(f">>> {result}")
+
             elif (command == "get"):
-                return True
+                result = dungeon.handleMessage(clients[websocket], message)
+                resultParsed = result.split(" ")
+                if (resultParsed[0] == "Item"):
+                    await websocket.send(f">>> {result}")
+                else:
+                    await websocket.send(result)
+
             elif (command == "drink"):
-                return False
+                result = dungeon.handleMessage(clients[websocket], message)
+                await websocket.send(result)
 
             # leaving this here for debugging purposes
             else:
                 for conn in connected:
                     await conn.send(">>> Succesfully pushed button")
 
+            # for debugging
             print(f">>> {message}")
     finally:
         # Unregister.

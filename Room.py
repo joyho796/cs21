@@ -16,7 +16,10 @@ class Room:
         return count
 
     def hasItem(self, name):
-        for item in self.items:
-            if item.Name == name:
+        if item in self.items:
                 return True
         return False
+
+    def removeItem(self, name):
+        if item in self.items:
+            self.items.remove(name)
