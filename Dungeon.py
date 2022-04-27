@@ -1,5 +1,6 @@
 from Room import *
 from Enemy import *
+from Player import *
 import random
 
 class Dungeon:
@@ -69,7 +70,7 @@ class Dungeon:
     def getRoomIndex(self, room):
         if (room == "Entrance"):
             return 0
-        elif (room[0] == "0"):
+        else:
             return int(room)
 
     ##########################################################################
@@ -77,7 +78,8 @@ class Dungeon:
     # (room 0)
     ##########################################################################
     def addPlayer(self, username):
-        self.players[username] = 0
+        self.players[username] = Player(username)
+        self.rooms[0].addPlayer(username)
 
     def removePlayer(self, username):
         self.players.remove(username)
@@ -92,74 +94,85 @@ class Dungeon:
         return output
 
     def handleMessage(self, player, message):
-        room = self.rooms[self.players[player]]
+        room = self.rooms[self.players[player].room]
 
         message = message.split(",")
 
         if message[0] == "attack":
-            if len(message) > 2:
-                maxDmg = self.ITEMDICT[message[2]]["maxRoll"]
-                minDmg = self.ITEMDICT[message[2]]["minRoll"]
-            else:
-                maxDmg = self.ITEMDICT[message[1]]["maxRoll"]
-                minDmg = self.ITEMDICT[message[1]]["minRoll"]
+            weapon = self.players[player].currentWeapon
+            maxDmg = self.ITEMDICT[weapon]["maxRoll"]
+            minDmg = self.ITEMDICT[weapon]["minRoll"]
             attackDmg = random.randint(minDmg, maxDmg)
-
             if len(room.enemies) > 0:
-                room.enemies[0].takeDamage(attackDmg)
-                return attackDmg
+                state = room.enemies[0].takeDamage(attackDmg)
+                if state == "dead":
+                    room.enemies.pop(0)
+                return str(attackDmg) + " " + state
             else:
-                return "There's no enemies here, you can relax"
+                return "There's no enemies here, you can relax."
 
         elif message[0] == "look":
             desc = []
-            desc.append("========== Room [" + room.roomName + "] ==========")
-            desc.append("| Enemies present: " + str(len(room.enemies)))
-            desc.append("| Items present: " + str(len(room.items)))
-            desc.append("| Rooms adjacent: " + str(room.countAdjacent()))
-            desc.append("=========================")
+            desc.append("Players present: " + str(len(room.players)))
+            desc.append("Enemies present: " + str(len(room.enemies)))
+            desc.append("Items present: " + str(len(room.items)))
+            desc.append("Rooms adjacent: " + str(room.countAdjacent()))
+            desc.append("=== Room " + room.roomName + " ===")
             # This would be a list of strings sent back to the player
             return(desc)
 
         elif message[0] == "move":
             adjacent = room.getAdjacent()
+            print(adjacent[0])
             if message[1] == "north":
                 if adjacent[0] == None:
                     return ("There's no room over there")
                 else:
-                    self.players[player] = self.getRoomIndex(adjacent[0])
+                    self.players[player].room = self.getRoomIndex(adjacent[0])
+                    room.removePlayer(player)
+                    self.rooms[self.getRoomIndex(adjacent[0])].addPlayer(player)
                     return adjacent[0]
             elif message[1] == "east":
                 if adjacent[1] == None:
                     return ("There's no room over there")
                 else:
-                    self.players[player] = self.getRoomIndex(adjacent[1])
+                    self.players[player].room = self.getRoomIndex(adjacent[1])
+                    room.removePlayer(player)
+                    self.rooms[self.getRoomIndex(adjacent[1])].addPlayer(player)
                     return adjacent[1]
             elif message[1] == "south":
                 if adjacent[2] == None:
                     return ("There's no room over there")
                 else:
-                    self.players[player] = self.getRoomIndex(adjacent[2])
+                    self.players[player].room = self.getRoomIndex(adjacent[2])
+                    room.removePlayer(player)
+                    self.rooms[self.getRoomIndex(adjacent[2])].addPlayer(player)
                     return adjacent[2]
             elif message[1] == "west":
                 if adjacent[3] == None:
                     return ("There's no room over there")
                 else:
-                    self.players[player] = self.getRoomIndex(adjacent[3])
+                    self.players[player].room = self.getRoomIndex(adjacent[3])
+                    room.removePlayer(player)
+                    self.rooms[self.getRoomIndex(adjacent[3])].addPlayer(player)
                     return adjacent[3]
             else:
                 # for debugging
                 return("Could not interpret that command.")
 
         elif message[0] == "get":
-            if message[1] in self.ITEMDICT:
-                if room.hasItem(message[1]):
-                    room.removeItem(message[1])
-                    return message[1]
+            if message[1].capitalize() in self.ITEMDICT:
+                if room.hasItem(message[1].capitalize()):
+                    room.removeItem(message[1].capitalize())
+                    if message[1].capitalize() == "Potion":
+                        self.players[player].potions.append(message[1].capitalize())
+                    else:
+                        self.players[player].weapons.append(message[1].capitalize())
+                    return "You picked up a " + message[1].capitalize() + "."
                 else:
-                    return "Item not in room. "
+                    return "Item not in room."
             else:
-                return "Item not recognized. "
+                return "Item not recognized."
 
         elif message[0] == "info":
             if (message[1] in self.ITEMDICT):
@@ -168,6 +181,38 @@ class Dungeon:
                 return "Given item not recognized."
 
         elif message[0] == "drink":
-            minRoll = self.ITEMDICT[message[1]]["minRoll"]
-            maxRoll = self.ITEMDICT[message[1]]["maxRoll"]
-            return random.randint(minRoll, maxRoll)
+            if len(self.players[player].potions) > 0:
+                minRoll = self.ITEMDICT[message[1]]["minRoll"]
+                maxRoll = self.ITEMDICT[message[1]]["maxRoll"]
+                hp = random.randint(minRoll, maxRoll)
+                self.players[player].heal(hp)
+                self.players[player].potions.remove("Potion")
+                return "You healed " + str(hp) + " HP!"
+            else:
+                return "You don't have any potions."
+
+        elif message[0] == "self":
+            player = self.players[player]
+            return str(player.hp) + ". " + player.currentWeapon + ". " + player.getInventory()
+
+        elif message[0] == "equip":
+            if (message[1] in self.ITEMDICT and message[1] != "Potion"):
+                if message[1] in self.players[player].weapons:
+                    self.players[player].currentWeapon = message[1]
+                    return message[1] + " equipped as weapon."
+                else:
+                    return "You don't have a " + message[1] + "."
+            else:
+                return "Weapon not recognized."
+
+        elif message[0] == "attackPlayer":
+            return "just testing"
+            # if len(room.enemies) > 0:
+            #     enemy = room.enemies[0]
+            #     minRoll = self.ENEMYDICT[enemy]["minRoll"]
+            #     maxRoll = self.ENEMYDICT[enemy]["maxRoll"]
+            #     hp = random.randint(minRoll, maxRoll)
+            #     self.players[player].takeDamage(hp)
+            #     return "You were attacked! -" + hp + " HP."
+            # else:
+            #     return "none"

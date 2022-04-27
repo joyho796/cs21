@@ -65,4 +65,5 @@ input[type=text]:focus {
     overflow-y: scroll;
     text-align: left;
     margin-bottom: 4px;
+    transition: 1s;
 }

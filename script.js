@@ -1,7 +1,6 @@
 
-
-
 window.addEventListener('load', function() {
+
 
     document.getElementById('content').onclick = function() {
         document.getElementById('textbox').focus()
@@ -10,61 +9,7 @@ window.addEventListener('load', function() {
     // Create WebSocket connection.
     const socket = new WebSocket('ws://localhost:5000');
 
-    class Player {
-        constructor() {
-            this.hp = 100
-            this.weapons = ["Knife"]
-            this.potions = []
-            this.currentWeapon = "Knife"
-        }
-
-        addWeapon(weaponName) {
-            this.weapons.push(weaponName)
-        }
-
-        addPotion(potionName) {
-            this.potions.push(potionName)
-        }
-
-        takeDamge(amount) {
-            this.hp -= amount
-        }
-
-        heal(amount) {
-            this.hp += amount
-        }
-
-        getHP() { return this.hp; }
-        getWeapon() { return this.currentWeapon; }
-
-        getInventory() {
-            var weaponsList = "Weapons: "
-            var potionsList = "Potions: "
-
-            for (var i = 0; i < this.weapons.length; i++) {
-                weaponsList += this.weapons[i]
-            }
-
-            for (var j = 0; j < this.potions.length; j++) {
-                potionsList += this.potions[j]
-            }
-
-            return [weaponsList, potionsList]
-        }
-
-        equip(weaponName) {
-            if (this.weapons.includes(weaponName)) {
-                this.currentWeapon = weaponName
-                return true
-            } else {
-                return false
-            }
-        }
-    }
-
-    player = new Player();
-
-    userNameGiven = false;
+    userNameGiven = null;
 
     // Connection opened
     socket.addEventListener('open', function (event) {
@@ -102,20 +47,18 @@ window.addEventListener('load', function() {
         this.message.value = ''
         parsedMessage = outgoingMessage.toLowerCase().split(" ");
 
-        if (!userNameGiven){
-            userNameGiven = true;
-            document.getElementById('name').innerHTML = outgoingMessage + "@dungeon_crawl: ~$&nbsp"
-            outgoingMessage = "name," + outgoingMessage;
-
+        if (userNameGiven == null) {
+            userNameGiven = outgoingMessage.replace(/\s/g, "");
+            document.getElementById('name').innerHTML = outgoingMessage.replace(/\s/g, "") + "@dungeon_crawl: ~$&nbsp"
+            outgoingMessage = "name," + outgoingMessage.replace(/\s/g, "");
         }
-
         // send message to all others in the server
         else if (parsedMessage[0] == "chat") {
             outgoingMessage = "chat," + outgoingMessage.slice(parsedMessage[0].length)
         // move to another room
         } else if (parsedMessage[0] == "move") {
             if (parsedMessage.length <= 1) {
-                logInfo(">>> A direction must be given.");
+                logInfo(">>> A direction must be given. You can move north, east, south, or west.");
                 return false;
             }
             if (parsedMessage[1] == "north") {
@@ -127,7 +70,7 @@ window.addEventListener('load', function() {
             } else if (parsedMessage[1] == "west") {
                 outgoingMessage = "move,west";
             } else {
-                logInfo(">>> Cannot move in that direction.");
+                logInfo(">>> Cannot move in that direction. You can move north, east, south, or west.");
                 return false;
             }
         // get info on what other players are in the dungeon
@@ -135,15 +78,11 @@ window.addEventListener('load', function() {
             outgoingMessage = "players";
         // attack an enemy
         } else if (parsedMessage[0] == "attack") {
-            if (parsedMessage.length == 1) {
-                outgoingMessage = "attack," + player.getWeapon();
-            } else {
-                outgoingMessage = "attack," + parsedMessage[1] + "," + player.getWeapon();
-            }
+            outgoingMessage = "attack"
         // get an item
         } else if (parsedMessage[0] == "get") {
             if (parsedMessage.length == 1) {
-                logInfo(">>> An item name must be given.");
+                logInfo(">>> An item name must be given. Items include knife, sword, dagger, and potion.");
                 return false;
             } else {
                 outgoingMessage = "get," + parsedMessage[1];
@@ -153,24 +92,42 @@ window.addEventListener('load', function() {
             outgoingMessage = "look"
         // if user wants info on an object
         } else if (parsedMessage[0] == "info") {
-            outgoingMessage = "info," + parsedMessage[1][0].toUpperCase() + parsedMessage[1].substring(1)
-        // check current inventory
-        } else if (parsedMessage[0] == "inventory") {
-            inventory = player.getInventory()
-            logInfo(">>> " + inventory[0])
-            logInfo(">>> " + inventory[1])
+            if (parsedMessage.length <= 1) {
+                logInfo(">>> An item name must be given. Items include knife, sword, dagger, and potion.");
+                return false;
+            } else {
+                outgoingMessage = "info," + parsedMessage[1][0].toUpperCase() + parsedMessage[1].substring(1)
+            }
         // equip weapon
         } else if (parsedMessage[0] == "equip") {
-            weaponName = parsedMessage[1][0].toUpperCase() + parsedMessage[1].substring(1)
-            var success = player.equip(weaponName)
-            if (success) {
-                logInfo(">>> You equipped a " + parsedMessage[1] + ".")
+            if (parsedMessage.length <= 1) {
+                logInfo(">>> Please choose a weapon to equip.");
+                return false;
             } else {
-                logInfo(">>> You don't have that. ")
+                outgoingMessage = "equip," + parsedMessage[1][0].toUpperCase() + parsedMessage[1].substring(1)
+            }
+        // info about self
+        } else if (parsedMessage[0] == "self") {
+            outgoingMessage = "self"
+        } else if (parsedMessage[0] == "drink") {
+            if (parsedMessage.length <= 1) {
+                logInfo(">>> Please choose a potion to drink.");
+                return false;
+            } else {
+                outgoingMessage = "drink," + parsedMessage[1][0].toUpperCase() + parsedMessage[1].substring(1)
             }
         // if given text is not a recognizable command
         } else if (parsedMessage[0] == "help") {
-            logInfo(">>> Commands available: attack, chat, equip, get, info, inventory, look, move. ")
+            logInfo(">>> === Available Commands ===")
+            logInfo(">>> self : check your HP, equipped weapon, and inventory")
+            logInfo(">>> attack : attack an enemy")
+            logInfo(">>> drink : drink a potion to heal your HP")
+            logInfo(">>> chat [message] : send a message to all the other players")
+            logInfo(">>> equip [weapon name] : equip a different weapon")
+            logInfo(">>> get [item name] : pick up an item")
+            logInfo(">>> info [item name] : learn more about an item")
+            logInfo(">>> look: get information about the room you're in")
+            logInfo(">>> move [north, east, south, west] : move to another room")
             return false;
         } else {
             logInfo(">>> Command given not recognized. Type help to see commands. ");
