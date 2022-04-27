@@ -51,9 +51,9 @@ class Dungeon:
         self.players = {}
         self.rooms = [Room("Entrance", None, "06", None, "01", [], [], \
                         "You wake up in a cold, damp, room lit by a torch. It seems safe here, however."), \
-                      Room("01", "02", "Entrance", "08", None, [], [],
+                      Room("01", "02", "Entrance", "08", None, [], [], \
                         "It seems there is nothing here."), \
-                      Room("02", None, "03", "01", None, ["Dagger", "Dagger", "Potion"], [Enemy("Grunt", self.ENEMYDICT["Grunt"], [])],
+                      Room("02", None, "03", "01", None, ["Dagger", "Dagger", "Potion"], [Enemy("Grunt", self.ENEMYDICT["Grunt"], [])], \
                         "In the darkness, you hear faint breathing coming from a corner." ), \
                       Room("03", "11", "04", None, "02", ["Dagger"], [Enemy("Grunt", self.ENEMYDICT["Grunt"], ["Potion"])], \
                         "It seems that some enemies may drop useful items when defeated."), \
@@ -74,7 +74,7 @@ class Dungeon:
                       Room("11", "13", None, "03", "12", ["Potion", "Sword"], [], \
                         "It seems this room may be preparing you for what's ahead."), \
                       Room("12", None, "11", None, None, [], [Enemy("Ooze", self.ENEMYDICT["Ooze"], ["Potion"])], \
-                        "A sign of what's to come." ),
+                        "A sign of what's to come."), \
                       Room("13", None, None, "03", None, [], [Enemy("Ooze", self.ENEMYDICT["Ooze"], ["Potion"])], \
                         "The final test. The room is surrounded by torches. In the middle of the room is a large Ooze.")]
 
