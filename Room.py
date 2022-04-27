@@ -1,11 +1,12 @@
 import time
 class Room:
-    def __init__(self, roomName, north, east, south, west, items, enemies):
+    def __init__(self, roomName, north, east, south, west, items, enemies, description):
         self.roomName = roomName
         self.adjacentRooms = [north, east, south, west]
         self.items = items
         self.enemies = enemies
         self.players = []
+        self.description = description
 
     def getAdjacent(self):
         return self.adjacentRooms
