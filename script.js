@@ -149,11 +149,7 @@ window.addEventListener('load', function() {
             messageElem.textContent = message;
             document.getElementById('messages').prepend(messageElem);
 
-        } else if (messageParsed[0] == "heal") {
-            amount = parseInt(messageParsed[1], 10)
-            player.heal(amount)
-            logInfo(">>> You healed " + amount + " hp. ")
-        }
+        } 
     }
 
 })

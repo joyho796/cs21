@@ -12,7 +12,7 @@ class Enemy:
     def takeDamage(self, attackVal):
         self.HP = self.HP - attackVal
 
-        if self.HP == 1:
+        if self.HP < 1:
             return "dead"
         else:
             return "alive"

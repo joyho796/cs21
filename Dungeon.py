@@ -22,7 +22,7 @@ class Dungeon:
             "description" : "An assassins dagger. Chips have begun to form along its edge, but it remains a trusty tool.",
             "minRoll" : 12,
             "maxRoll" : 15,
-            "isWeapon" : False
+            "isWeapon" : True
         },
         "Potion" : {
             "description" : "A healing potion. It says healing on the red bottle, so it should be fine, right?",
@@ -49,34 +49,33 @@ class Dungeon:
 
     def __init__(self):
         self.players = {}
-        self.rooms = [Room("Entrance", None, "06", None, "01", [], [], \
-                        "You wake up in a cold, damp, room lit by a torch. It seems safe here, however."), \
-                      Room("01", "02", "Entrance", "08", None, [], [], \
-                        "It seems there is nothing here."), \
-                      Room("02", None, "03", "01", None, ["Dagger", "Dagger", "Potion"], [Enemy("Grunt", self.ENEMYDICT["Grunt"], [])], \
-                        "In the darkness, you hear faint breathing coming from a corner." ), \
-                      Room("03", "11", "04", None, "02", ["Dagger"], [Enemy("Grunt", self.ENEMYDICT["Grunt"], ["Potion"])], \
-                        "It seems that some enemies may drop useful items when defeated."), \
-                      Room("04", None, "05", "06", "03", ["Potion"], [Enemy("Grunt", self.ENEMYDICT["Grunt"], ["Sword"])], \
-                        "Getting an upgrade!"), \
-                      Room("05", None, None, None, "04", ["Potion", "Sword"], [Enemy("Ooze", self.ENEMYDICT["Ooze"], ["Sword"])], \
-                        "As you walk in, you suddenly hear a growl from behind you."), \
-                      Room("06", "04", None, "07", "Entrance", [], [Enemy("Grunt", self.ENEMYDICT["Grunt"], ["Potion"])], \
-                        "More of the same here."), \
-                      Room("07", "06", None, None, None, [], [Enemy("Grunt", self.ENEMYDICT["Grunt"], ["Sword"])], \
-                        "Lost?"), \
-                      Room("08", "01", "09", "10", None, ["Dagger"], [], \
-                        "On the ground is a small dagger, glimmering in the torchlight."), \
-                      Room("09", None, None, None, "08", [], [Enemy("Ooze", self.ENEMYDICT["Ooze"], ["Potion"])], \
-                        "The room is pitch black. From your side, you feel warm breathing."), \
-                      Room("10", "08", None, None, None, [], [Enemy("Ooze", self.ENEMYDICT["Ooze"], ["Potion"])], \
-                        "This room is well lit, and you find yourself face to face with a large Ooze."), \
-                      Room("11", "13", None, "03", "12", ["Potion", "Sword"], [], \
-                        "It seems this room may be preparing you for what's ahead."), \
-                      Room("12", None, "11", None, None, [], [Enemy("Ooze", self.ENEMYDICT["Ooze"], ["Potion"])], \
-                        "A sign of what's to come."), \
-                      Room("13", None, None, "03", None, [], [Enemy("Ooze", self.ENEMYDICT["Ooze"], ["Potion"])], \
-                        "The final test. The room is surrounded by torches. In the middle of the room is a large Ooze.")]
+        self.rooms = [Room("Entrance", None, "06", None, "01", [], []), \
+                      Room("01", "02", "Entrance", "08", None, [], []), \
+                      Room("02", None, "03", "01", None, ["Dagger", "Dagger", "Potion"], [Enemy("Grunt", self.ENEMYDICT["Grunt"], [])]), \
+                      Room("03", "11", "04", None, "02", ["Dagger"], [Enemy("Grunt", self.ENEMYDICT["Grunt"], ["Potion"])]), \
+                      Room("04", None, "05", "06", "03", ["Potion"], [Enemy("Grunt", self.ENEMYDICT["Grunt"], ["Sword"])]), \
+                      Room("05", None, None, None, "04", ["Potion", "Sword"], [Enemy("Ooze", self.ENEMYDICT["Ooze"], ["Sword"])]), \
+                      Room("06", "04", None, "07", "Entrance", [], [Enemy("Grunt", self.ENEMYDICT["Grunt"], ["Potion"])]), \
+                      Room("07", "06", None, None, None, [], [Enemy("Grunt", self.ENEMYDICT["Grunt"], ["Sword"])]), \
+                      Room("08", "01", "09", "10", None, ["Dagger"], []), \
+                      Room("09", None, None, None, "08", [], [Enemy("Ooze", self.ENEMYDICT["Ooze"], ["Potion"])]), \
+                      Room("10", "08", None, None, None, [], [Enemy("Ooze", self.ENEMYDICT["Ooze"], ["Potion"])]), \
+                      Room("11", "13", None, "03", "12", ["Potion", "Sword"], []), \
+                      Room("12", None, "11", None, None, [], [Enemy("Ooze", self.ENEMYDICT["Ooze"], ["Potion"])]),
+                      Room("13", None, None, "03", None, [], [Enemy("Ooze", self.ENEMYDICT["Ooze"], ["Potion"])])]
+
+
+    def getIntro(self):
+        with open('introASCII.text') as f:
+            lines = f.readlines()
+
+        output = []
+
+        for line in lines:
+            #output.append(line)
+            output.append(line.replace(" ", "&nbsp;"))
+
+        return output
 
     ##########################################################################
     # Given the name of a room, returns its index in the room array
@@ -95,9 +94,15 @@ class Dungeon:
         self.players[username] = Player(username)
         self.rooms[0].addPlayer(username)
 
+    ##########################################################################
+    # Removes a player from the dungeon.
+    ##########################################################################
     def removePlayer(self, username):
         self.players.remove(username)
 
+    ##########################################################################
+    # Returns a list of all players in the dungeon
+    ##########################################################################
     def getPlayers(self):
         output = "Players in dungeon are: "
         for player in self.players:
@@ -128,8 +133,8 @@ class Dungeon:
         elif message[0] == "look":
             desc = []
             desc.append("Players present: " + str(len(room.players)))
-            desc.append("Enemies present: " + str(len(room.enemies)))
-            desc.append("Items present: " + str(len(room.items)))
+            desc.append("Enemies present: " + room.getEnemies())
+            desc.append("Items present: " + room.getItems())
             desc.append("Rooms adjacent: " + str(room.countAdjacent()))
             desc.append("=== Room " + room.roomName + " ===")
             # This would be a list of strings sent back to the player

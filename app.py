@@ -18,6 +18,9 @@ async def addUser(websocket, name):
         if conn != websocket:
             await conn.send(f">>> {name} has entered the dungeon. ")
         else:
+            #intro = dungeon.getIntro()
+            #for line in intro:
+            #    await conn.send(f"intro >>> {line}")
             await conn.send(f">>> Welcome to the dungeon, {name}! Type help to see a list of commands.")
     dungeon.addPlayer(name)
 
@@ -30,7 +33,7 @@ async def chat(websocket, message):
 
 
 async def attackPlayers(websocket):
-    while True: 
+    while True:
         time.sleep(5)
         result = dungeon.handleMessage(clients[websocket], "attackPlayer")
         for conn in connected:
@@ -121,6 +124,7 @@ async def server(websocket, path):
             # leaving this here for debugging purposes
             elif (command == "self"):
                 result = dungeon.handleMessage(clients[websocket], message).split(". ")
+                await websocket.send(f">>> === Self ===")
                 await websocket.send(f">>> HP: {result[0]}")
                 await websocket.send(f">>> Equipped weapon: {result[1]}")
                 await websocket.send(f">>> {result[2]}")
