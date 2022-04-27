@@ -1,5 +1,6 @@
 from Room import *
 from Enemy import *
+import random
 
 class Dungeon:
 
@@ -97,10 +98,12 @@ class Dungeon:
 
         if message[0] == "attack":
             if len(message) > 2:
-                attackDmg = Item.getDamage(message[2])
+                maxDmg = self.ITEMDICT[message[2]]["maxRoll"]
+                minDmg = self.ITEMDICT[message[2]]["minRoll"]
             else:
-                attackDmg = Item.getDamage(message[1])
-            attackDmg = random.randint(1, attackDmg)
+                maxDmg = self.ITEMDICT[message[1]]["maxRoll"]
+                minDmg = self.ITEMDICT[message[1]]["minRoll"]
+            attackDmg = random.randint(minDmg, maxDmg)
 
             if len(room.enemies) > 0:
                 room.enemies[0].takeDamage(attackDmg)

@@ -1,7 +1,7 @@
 
 
 
-window.addEventListener('load', function() {  
+window.addEventListener('load', function() {
 
     document.getElementById('content').onclick = function() {
         document.getElementById('textbox').focus()
@@ -13,7 +13,7 @@ window.addEventListener('load', function() {
     class Player {
         constructor() {
             this.hp = 100
-            this.weapons = []
+            this.weapons = ["Knife"]
             this.potions = []
             this.currentWeapon = "Knife"
         }
@@ -23,11 +23,43 @@ window.addEventListener('load', function() {
         }
 
         addPotion(potionName) {
-            this.potions.push(weaponName)
+            this.potions.push(potionName)
+        }
+
+        takeDamge(amount) {
+            this.hp -= amount
+        }
+
+        heal(amount) {
+            this.hp += amount
         }
 
         getHP() { return this.hp; }
         getWeapon() { return this.currentWeapon; }
+
+        getInventory() {
+            var weaponsList = "Weapons: "
+            var potionsList = "Potions: "
+
+            for (var i = 0; i < this.weapons.length; i++) {
+                weaponsList += this.weapons[i]
+            }
+
+            for (var j = 0; j < this.potions.length; j++) {
+                potionsList += this.potions[j]
+            }
+
+            return [weaponsList, potionsList]
+        }
+
+        equip(weaponName) {
+            if (this.weapons.includes(weaponName)) {
+                this.currentWeapon = weaponName
+                return true
+            } else {
+                return false
+            }
+        }
     }
 
     player = new Player();
@@ -116,13 +148,32 @@ window.addEventListener('load', function() {
             } else {
                 outgoingMessage = "get," + parsedMessage[1];
             }
-        // if given text is not a recognizable command
-        
+        // look around room
+        } else if (parsedMessage[0] == "look") {
+            outgoingMessage = "look"
+        // if user wants info on an object
+        } else if (parsedMessage[0] == "info") {
+            outgoingMessage = "info," + parsedMessage[1][0].toUpperCase() + parsedMessage[1].substring(1)
+        // check current inventory
+        } else if (parsedMessage[0] == "inventory") {
+            inventory = player.getInventory()
+            logInfo(">>> " + inventory[0])
+            logInfo(">>> " + inventory[1])
+        // equip weapon
+        } else if (parsedMessage[0] == "equip") {
+            weaponName = parsedMessage[1][0].toUpperCase() + parsedMessage[1].substring(1)
+            var success = player.equip(weaponName)
+            if (success) {
+                logInfo(">>> You equipped a " + parsedMessage[1] + ".")
+            } else {
+                logInfo(">>> You don't have that. ")
+            }
         // if given text is not a recognizable command
         } else if (parsedMessage[0] == "help") {
-            logInfo(">>> Commands available: chat, move, attack, get, players")
+            logInfo(">>> Commands available: attack, chat, equip, get, info, inventory, look, move. ")
+            return false;
         } else {
-            logInfo(">>> Command given not recognized.");
+            logInfo(">>> Command given not recognized. Type help to see commands. ");
             return false;
         }
 
@@ -134,11 +185,18 @@ window.addEventListener('load', function() {
     socket.onmessage = function(event) {
         let message = event.data;
 
-        
+        messageParsed = message.split(" ")
 
-        let messageElem = document.createElement('div');
-        messageElem.textContent = message;
-        document.getElementById('messages').prepend(messageElem);
+        if (messageParsed[0] == ">>>") {
+            let messageElem = document.createElement('div');
+            messageElem.textContent = message;
+            document.getElementById('messages').prepend(messageElem);
+
+        } else if (messageParsed[0] == "heal") {
+            amount = parseInt(messageParsed[1], 10)
+            player.heal(amount)
+            logInfo(">>> You healed " + amount + " hp. ")
+        }
     }
 
 })

@@ -46,7 +46,7 @@ async def move(websocket, message, direction):
 # needs work
 async def attack(websocket, message):
     result = dungeon.handleMessage(clients[websocket], message)
-    if (result.split(" ")[0] == "dealt"):
+    if (type(result) == int):
         for conn in connected:
             if conn != websocket:
                 await conn.send(f">>> {clients[websocket]} dealt {result} damage to enemy.")
@@ -119,18 +119,20 @@ async def server(websocket, path):
 
             elif (command == "drink"):
                 result = dungeon.handleMessage(clients[websocket], message)
-                await websocket.send(result)
+                await websocket.send("heal " + result)
 
             # leaving this here for debugging purposes
             else:
                 for conn in connected:
-                    await conn.send(">>> Succesfully pushed button")
+                    await conn.send("Succesfully pushed button")
 
             # for debugging
             print(f">>> {message}")
     finally:
         # Unregister.
         connected.remove(websocket)
+        if websocket in clients:
+            del clients[websocket]
 
 
 start_server = websockets.serve(server, "localhost", 5000)
