@@ -108,6 +108,39 @@ class Dungeon:
         self.rooms[roomIndex].removePlayer(username)
         del self.players[username]
 
+
+    ##########################################################################
+    # Determines if player and enemy are in the same room.
+    ##########################################################################
+    def playerAndEnemyInRoom(self, roomName):
+        roomIndex = self.getRoomIndex(roomName)
+        room = self.rooms[roomIndex]
+
+        if (len(room.players) > 0) and (len(room.enemies) > 0):
+            return True
+
+        return False
+
+
+    ##########################################################################
+    # If there are players and enemies in the same room, selects a random
+    # enemy to attack a random player.
+    ##########################################################################
+    def attackPlayerInRoom(self, roomName):
+        roomIndex = self.getRoomIndex(roomName)
+        room = self.rooms[roomIndex]
+
+        player = random.choice(room.players)
+        enemy = random.choice(room.enemies)
+
+        maxDmg = self.ENEMYDICT[enemy.Name]["maxDamage"]
+        minDmg = self.ENEMYDICT[enemy.Name]["minDamage"]
+        attackDmg = random.randint(minDmg, maxDmg)
+
+        self.players[player].takeDamage(attackDmg)
+
+        return [player, enemy.Name, attackDmg]
+
 ##############################################################################
 
     ##########################################################################

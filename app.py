@@ -9,9 +9,18 @@ import time, threading
 
 connected = set()
 clients = {} # websocket: name
-userNames = []
-threads = {}
+threads = []
 dungeon = Dungeon()
+
+lockRoomStates = threading.Lock()
+
+def getSocketByUsername(userName):
+    userNames = list(clients.values())
+    index = userNames.index(userName)
+    sockets = list(clients.keys())
+    socket = sockets[index]
+
+    return socket
 
 async def addUser(websocket, name):
     clients[websocket] = name
@@ -26,8 +35,28 @@ async def addUser(websocket, name):
     dungeon.addPlayer(name)
 
 
+async def attackPlayer(room):
+    enemyAttack = dungeon.playerAndEnemyInRoom(room)
+
+    while enemyAttack:
+        lockRoomStates.acquire()
+        if dungeon.playerAndEnemyInRoom(room):
+            result = dungeon.attackPlayerInRoom(room)
+            print(result)
+            websocket = getSocketByUsername(result[0])
+            for conn in connected:
+                if conn != websocket:
+                    await conn.send(f">>> {result[1]} attacked {clients[websocket]} for {result[2]} damage. ")
+                else:
+                    await conn.send(f">>> {result[1]} attacked you for {result[2]} damage.")
+        else: enemyAttack = False
+
+        lockRoomStates.release()
+        time.sleep(3)
+
 # player wants to attack an enemy in the room
 async def attack(websocket, target):
+    lockRoomStates.acquire()
     results = dungeon.attack(clients[websocket], target)
 
 
@@ -45,6 +74,7 @@ async def attack(websocket, target):
                 await conn.send(f">>> You dealt {results[1]} damage to the {results[2]}. The {results[2]} is {results[3]}.")
     else:
         await websocket.send(f">>> {results[0]}")
+    lockRoomStates.release()
 
 
 ##########################################################################
@@ -61,14 +91,6 @@ async def chat(websocket, message):
             await conn.send(f">>> You: {message} ")
 
 
-async def attackPlayers(websocket):
-    while True:
-        time.sleep(5)
-        result = dungeon.handleMessage(clients[websocket], "attackPlayer")
-        for conn in connected:
-            if conn == websocket:
-                await conn.send(f">>> {result}")
-
 async def give(websocket, target, item):
     result = dungeon.give(clients[websocket], target, item)
     if (len(result) != 1):
@@ -81,17 +103,25 @@ async def give(websocket, target, item):
                 await conn.send(f">>> You gave {target} a(n) {item}. ")
 
 async def move(websocket, direction):
+    lockRoomStates.acquire()
     result = dungeon.move(clients[websocket], direction)
     print(result)
 
     if (len(result) == 1):
         await websocket.send(f">>> {result[0]}")
     else:
+        enemyAttack = dungeon.playerAndEnemyInRoom(result[1])
+        print(enemyAttack)
+        if enemyAttack:
+            thread = threading.Thread(target=asyncio.run, args=(attackPlayer(result[1]), ))
+            thread.start()
         for conn in connected:
             if conn != websocket:
                 await conn.send(f">>> {clients[websocket]} moved {direction} from room {result[0]} to room {result[1]}. ")
             else:
                 await conn.send(f">>> You moved {direction} from room {result[0]} to room {result[1]}. ")
+
+    lockRoomStates.release()
 
 
 async def server(websocket, path):
