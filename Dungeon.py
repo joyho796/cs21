@@ -6,6 +6,12 @@ import random
 class Dungeon:
 
     ITEMDICT = {
+        "Fist" : {
+            "description" : "It's your own fist. You should be familiar with it. ",
+            "minRoll" : 1,
+            "maxRoll" : 2,
+            "isWeapon" : True
+        },
         "Knife" : {
             "description" : "A small penknife. Honestly, it's better suited for whittling than combat. ",
             "minRoll" : 2,
@@ -98,12 +104,194 @@ class Dungeon:
     # Removes a player from the dungeon.
     ##########################################################################
     def removePlayer(self, username):
-        self.players.remove(username)
+        roomIndex = self.players[username].getRoomNumber()
+        self.rooms[roomIndex].removePlayer(username)
+        del self.players[username]
+
+##############################################################################
+
+    ##########################################################################
+    #
+    ##########################################################################
+    def attack(self, player, target):
+        room = self.rooms[self.players[player].room]
+
+        weapon = self.players[player].currentWeapon
+        maxDmg = self.ITEMDICT[weapon]["maxRoll"]
+        minDmg = self.ITEMDICT[weapon]["minRoll"]
+        attackDmg = random.randint(minDmg, maxDmg)
+
+        # if no specific target given, attack enemy in the room, if any
+        if target == None:
+            if len(room.enemies) <= 0:
+                return ["There's no enemies here, you can relax."]
+
+            state = room.enemies[0].takeDamage(attackDmg)
+            name = room.enemies[0].Name
+
+            if state == "dead":
+                droppedItems = room.enemies[0].DroppedItems
+                room.items.extend(droppedItems)
+                room.enemies.pop(0)
+
+            return [room, attackDmg, name, state]
+
+        # player wants to attack other player
+        elif (target in self.players.keys()):
+            self.players[target].takeDamage(attackDmg)
+            return [room, attackDmg, target]
+
+        return ["Target given not in room."]
+
+
+    def drink(self, player, item):
+        item = item.capitalize()
+
+        if len(self.players[player].potions) > 0:
+            minRoll = self.ITEMDICT[item]["minRoll"]
+            maxRoll = self.ITEMDICT[item]["maxRoll"]
+            hp = random.randint(minRoll, maxRoll)
+            self.players[player].heal(hp)
+            self.players[player].potions.remove("Potion")
+            return "You healed " + str(hp) + " HP!"
+        else:
+            return "You don't have any potions."
+
+
+    def equip(self, player, item):
+        item = item.capitalize()
+
+        if (item in self.ITEMDICT and item != "Potion"):
+            if item in self.players[player].weapons:
+                self.players[player].currentWeapon = item
+                return item + " equipped as weapon."
+            else:
+                return "You don't have a " + item + "."
+        else:
+            return "Weapon not recognized."
+
+
+    ##########################################################################
+    # Adds a given item from the player's current room to their inventory,
+    # if said item is in the room.
+    ##########################################################################
+    def get(self, player, item):
+        item = item.capitalize()
+
+        room = self.rooms[self.players[player].room]
+
+        if item.capitalize() in self.ITEMDICT:
+            if room.hasItem(item.capitalize()):
+                room.removeItem(item.capitalize())
+                if item.capitalize() == "Potion":
+                    self.players[player].potions.append(item.capitalize())
+                else:
+                    self.players[player].weapons.append(item.capitalize())
+                return "You picked up a " + item.capitalize() + "."
+            else:
+                return "Item not in room."
+        else:
+            return "Item not recognized."
+
+
+    def give(self, player, target, item):
+        item = item.capitalize()
+
+        if not(item in self.ITEMDICT):
+            return ["Item not recognized.", False]
+        elif not((item in self.players[player].weapons) or (item in self.players[player].potions)):
+            return ["Item not in your inventory. ", False]
+
+        room = self.rooms[self.players[player].room]
+
+        if (target in self.players.keys()):
+            if target in room.players:
+                self.players[player].removeItem(item)
+                if (self.ITEMDICT[item]["isWeapon"]):
+                    self.players[target].addWeapon(item)
+                else: self.players[target].addPotion(item)
+                return ["Item given."]
+            return ["Player must be in your room to give items. ", False]
+
+        return ["Player not in dungeon. ", False]
+
+
+    ##########################################################################
+    # Returns information about a given item.
+    ##########################################################################
+    def info(self, item):
+        item = item.capitalize()
+
+        if (item in self.ITEMDICT):
+            return self.ITEMDICT[item]["description"]
+        else:
+            return "Given item not recognized."
+
+
+    ##########################################################################
+    # Returns information about a given room.
+    ##########################################################################
+    def look(self, player):
+        room = self.rooms[self.players[player].room]
+
+        desc = []
+        desc.append("Players present: " + str(len(room.players)))
+        desc.append("Enemies present: " + room.getEnemies())
+        desc.append("Items present: " + room.getItems())
+        desc.append("Rooms adjacent: " + str(room.countAdjacent()))
+        desc.append("=== Room " + room.roomName + " ===")
+        # This would be a list of strings sent back to the player
+        return(desc)
+
+
+    ##########################################################################
+    # Moves a player from one room to another
+    ##########################################################################
+    def move(self, player, direction):
+        room = self.rooms[self.players[player].room]
+        roomName = room.roomName
+
+        adjacent = room.getAdjacent()
+
+        if direction == "north":
+            if adjacent[0] == None:
+                return ["There's no room over there"]
+            else:
+                self.players[player].room = self.getRoomIndex(adjacent[0])
+                room.removePlayer(player)
+                self.rooms[self.getRoomIndex(adjacent[0])].addPlayer(player)
+                return [roomName, adjacent[0]]
+        elif direction == "east":
+            if adjacent[1] == None:
+                return ["There's no room over there"]
+            else:
+                self.players[player].room = self.getRoomIndex(adjacent[1])
+                room.removePlayer(player)
+                self.rooms[self.getRoomIndex(adjacent[1])].addPlayer(player)
+                return [roomName, adjacent[1]]
+        elif direction == "south":
+            if adjacent[2] == None:
+                return ["There's no room over there"]
+            else:
+                self.players[player].room = self.getRoomIndex(adjacent[2])
+                room.removePlayer(player)
+                self.rooms[self.getRoomIndex(adjacent[2])].addPlayer(player)
+                return [roomName, adjacent[2]]
+        elif direction == "west":
+            if adjacent[3] == None:
+                return ["There's no room over there"]
+            else:
+                self.players[player].room = self.getRoomIndex(adjacent[3])
+                room.removePlayer(player)
+                self.rooms[self.getRoomIndex(adjacent[3])].addPlayer(player)
+                return [roomName, adjacent[3]]
+        else:
+            return ["Cannot move in that direction."]
 
     ##########################################################################
     # Returns a list of all players in the dungeon
     ##########################################################################
-    def getPlayers(self):
+    def players(self):
         output = "Players in dungeon are: "
         for player in self.players:
             output += player + ", "
@@ -112,126 +300,6 @@ class Dungeon:
 
         return output
 
-    def handleMessage(self, player, message):
-        room = self.rooms[self.players[player].room]
-
-        message = message.split(",")
-
-        if message[0] == "attack":
-            weapon = self.players[player].currentWeapon
-            maxDmg = self.ITEMDICT[weapon]["maxRoll"]
-            minDmg = self.ITEMDICT[weapon]["minRoll"]
-            attackDmg = random.randint(minDmg, maxDmg)
-            if len(room.enemies) > 0:
-                state = room.enemies[0].takeDamage(attackDmg)
-                if state == "dead":
-                    room.enemies.pop(0)
-                return str(attackDmg) + " " + state
-            else:
-                return "There's no enemies here, you can relax."
-
-        elif message[0] == "look":
-            desc = []
-            desc.append("Players present: " + str(len(room.players)))
-            desc.append("Enemies present: " + room.getEnemies())
-            desc.append("Items present: " + room.getItems())
-            desc.append("Rooms adjacent: " + str(room.countAdjacent()))
-            desc.append("=== Room " + room.roomName + " ===")
-            # This would be a list of strings sent back to the player
-            return(desc)
-
-        elif message[0] == "move":
-            adjacent = room.getAdjacent()
-            print(adjacent[0])
-            if message[1] == "north":
-                if adjacent[0] == None:
-                    return ("There's no room over there")
-                else:
-                    self.players[player].room = self.getRoomIndex(adjacent[0])
-                    room.removePlayer(player)
-                    self.rooms[self.getRoomIndex(adjacent[0])].addPlayer(player)
-                    return adjacent[0]
-            elif message[1] == "east":
-                if adjacent[1] == None:
-                    return ("There's no room over there")
-                else:
-                    self.players[player].room = self.getRoomIndex(adjacent[1])
-                    room.removePlayer(player)
-                    self.rooms[self.getRoomIndex(adjacent[1])].addPlayer(player)
-                    return adjacent[1]
-            elif message[1] == "south":
-                if adjacent[2] == None:
-                    return ("There's no room over there")
-                else:
-                    self.players[player].room = self.getRoomIndex(adjacent[2])
-                    room.removePlayer(player)
-                    self.rooms[self.getRoomIndex(adjacent[2])].addPlayer(player)
-                    return adjacent[2]
-            elif message[1] == "west":
-                if adjacent[3] == None:
-                    return ("There's no room over there")
-                else:
-                    self.players[player].room = self.getRoomIndex(adjacent[3])
-                    room.removePlayer(player)
-                    self.rooms[self.getRoomIndex(adjacent[3])].addPlayer(player)
-                    return adjacent[3]
-            else:
-                # for debugging
-                return("Could not interpret that command.")
-
-        elif message[0] == "get":
-            if message[1].capitalize() in self.ITEMDICT:
-                if room.hasItem(message[1].capitalize()):
-                    room.removeItem(message[1].capitalize())
-                    if message[1].capitalize() == "Potion":
-                        self.players[player].potions.append(message[1].capitalize())
-                    else:
-                        self.players[player].weapons.append(message[1].capitalize())
-                    return "You picked up a " + message[1].capitalize() + "."
-                else:
-                    return "Item not in room."
-            else:
-                return "Item not recognized."
-
-        elif message[0] == "info":
-            if (message[1] in self.ITEMDICT):
-                return self.ITEMDICT[message[1]]["description"]
-            else:
-                return "Given item not recognized."
-
-        elif message[0] == "drink":
-            if len(self.players[player].potions) > 0:
-                minRoll = self.ITEMDICT[message[1]]["minRoll"]
-                maxRoll = self.ITEMDICT[message[1]]["maxRoll"]
-                hp = random.randint(minRoll, maxRoll)
-                self.players[player].heal(hp)
-                self.players[player].potions.remove("Potion")
-                return "You healed " + str(hp) + " HP!"
-            else:
-                return "You don't have any potions."
-
-        elif message[0] == "self":
-            player = self.players[player]
-            return str(player.hp) + ". " + player.currentWeapon + ". " + player.getInventory()
-
-        elif message[0] == "equip":
-            if (message[1] in self.ITEMDICT and message[1] != "Potion"):
-                if message[1] in self.players[player].weapons:
-                    self.players[player].currentWeapon = message[1]
-                    return message[1] + " equipped as weapon."
-                else:
-                    return "You don't have a " + message[1] + "."
-            else:
-                return "Weapon not recognized."
-
-        elif message[0] == "attackPlayer":
-            return "just testing"
-            # if len(room.enemies) > 0:
-            #     enemy = room.enemies[0]
-            #     minRoll = self.ENEMYDICT[enemy]["minRoll"]
-            #     maxRoll = self.ENEMYDICT[enemy]["maxRoll"]
-            #     hp = random.randint(minRoll, maxRoll)
-            #     self.players[player].takeDamage(hp)
-            #     return "You were attacked! -" + hp + " HP."
-            # else:
-            #     return "none"
+    def self(self, player):
+        player = self.players[player]
+        return str(player.hp) + ". " + player.currentWeapon + ". " + player.getInventory()

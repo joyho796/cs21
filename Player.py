@@ -11,14 +11,25 @@ class Player:
     def addWeapon(self, weaponName):
         self.weapons.append(weaponName)
 
+    def removeItem(self, item):
+        if item in self.weapons:
+            if self.currentWeapon == item:
+                self.currentWeapon = "Fist"
+            self.weapons.remove(item)
+        elif item in self.potions:
+            self.potions.remove(item)
+
     def addPotion(self, potionName):
         self.potions.append(potionName)
-   
+
     def takeDamage(self, amount):
         self.hp = self.hp - amount
 
     def heal(self, amount):
         self.hp = self.hp + amount
+
+    def getRoomNumber(self):
+        return self.room
 
     def getInventory(self):
         weaponsList = "Weapons: "
@@ -33,5 +44,5 @@ class Player:
             potionsList += "None"
         else:
             potionsList += ", ".join(self.potions)
-        
+
         return weaponsList + ". " + potionsList
