@@ -24,6 +24,13 @@ async def addUser(websocket, name):
             await conn.send(f">>> Welcome to the dungeon, {name}! Type help to see a list of commands.")
     dungeon.addPlayer(name)
 
+
+##########################################################################
+# Takes: websocket, string
+# Does: Sends given message to all clients. The message sender is given
+# the message for their chatlog, while all others are given the sender's
+# username and message.
+##########################################################################
 async def chat(websocket, message):
     for conn in connected:
         if conn != websocket:
