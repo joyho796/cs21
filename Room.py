@@ -45,20 +45,26 @@ class Room:
     # returns a list of the items in the room as a string
     def getItems(self):
         output = ""
-        for item in self.items:
-            output += item + ", "
+        if len(self.items) == 0:
+            output = "None"
+        else:
+            for item in self.items:
+                output += item + ", "
 
-        output = output[:len(output) - 2]
+            output = output[:len(output) - 2]
 
         return output
 
     # returns a list of items in the room as a string
     def getEnemies(self):
         output = ""
-        for enemy in self.enemies:
-            output += enemy.getName() + ", "
+        if len(self.enemies) == 0:
+            output = "None"
+        else:
+            for enemy in self.enemies:
+                output += enemy.getName() + ", "
 
-        output = output[:len(output) - 2]
+            output = output[:len(output) - 2]
 
         return output
 

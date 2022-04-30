@@ -48,20 +48,20 @@ window.addEventListener('load', function() {
             }
         } else if (parsedMessage[0] == "help") {
             logInfo(">>> === Available Commands ===")
+            logInfo(">>> players : get list of players in the dungeon")
             logInfo(">>> self : check your HP, equipped weapon, and inventory")
+            logInfo(">>> chat [message] : send a message to all the other players")
+            logInfo(">>> look: get information about the room you're in")
             logInfo(">>> attack : attack an enemy. ")
             logInfo(">>> attack [player name] : attack a player.")
-            logInfo(">>> chat [message] : send a message to all the other players")
             logInfo(">>> drink : drink a potion to heal your HP")
             logInfo(">>> equip [weapon name] : equip a different weapon")
             logInfo(">>> get [item name] : pick up an item")
             logInfo(">>> give [item name] : pick up an item")
             logInfo(">>> info [item name] : learn more about an item")
-            logInfo(">>> look: get information about the room you're in")
             logInfo(">>> move [north, east, south, west] : move to another room")
-            logInfo(">>> players : get list of players in the dungeon")
             logInfo(">>> restart : restart the game")
-            logInfo(">>> ===")
+            logInfo(">>> ==========================")
             return false;
         }
 

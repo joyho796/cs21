@@ -42,9 +42,9 @@ async def addUser(websocket, name):
                 await conn.send(f">>> {name} has entered the dungeon. ")
             else:
                 await websocket.send("validName " + name)
-                await conn.send(f">>> Torch in hand, you descend down the stairwell, footsteps echoing into the long tunnel.")
-                time.sleep(1)
-                await conn.send(f">>> ...Welcome to the dungeon, {name}. Type help to see a list of commands.")
+                await conn.send(f">>> Torch in hand, you descend down the stairwell, footsteps echoing into the long tunnel...")
+                time.sleep(2)
+                await conn.send(f">>> Welcome to the dungeon, {name.capitalize()}. Type help to see a list of commands.")
         dungeon.addPlayer(name)
 
 
@@ -293,6 +293,7 @@ async def server(websocket, path):
                 await websocket.send(f">>> Equipped weapon: {result[1]}")
                 await websocket.send(f">>> {result[2]}")
                 await websocket.send(f">>> {result[3]}")
+                await websocket.send(f">>> ============")
 
             else:
                 await websocket.send(f">>> Command given not recognized. Type help to see commands. ")

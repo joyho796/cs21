@@ -87,7 +87,7 @@ class Dungeon:
         "01" : "The remains of a wooden chair lie crumpled in the corner. It might have been nice to have a seat, if it wasn't broken.",
         "02" : "A lovely moldering tapestry of a unicorn adorns the wall.",
         "03" : "A rat scampers across the floor.",
-        "04" : "Something green drips down from the cieling.",
+        "04" : "Something green drips down from the ceiling.",
         "05" : "The edges of the door in this room boast beautiful carved trim of vines and flowers.",
         "06" : "Yellowing bones lie strewn across the floor, picked clean of flesh and skin.",
         "07" : "Relief sculptures of lions stand proud of the corners of the room.",
@@ -361,12 +361,12 @@ class Dungeon:
     def look(self, player):
         room = self.rooms[self.players[player].room]
 
-        desc = ["==="]
+        desc = ["==============="]
         desc.append("Players present: " + str(len(room.players)))
         desc.append("Enemies present: " + room.getEnemies())
         desc.append("Items present: " + room.getItems())
         desc.append("Rooms adjacent: " + str(room.countAdjacent()))
-        desc.append("Description: " + self.ROOMDESCRIPTIONSDICT[room.roomName])
+        desc.append(self.ROOMDESCRIPTIONSDICT[room.roomName])
         desc.append("=== Room " + room.roomName + " ===")
         # This would be a list of strings sent back to the player
         return(desc)
