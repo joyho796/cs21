@@ -1,0 +1,8 @@
+Team Name: MangoTango!
+Members: Joy Ho, Ian Chang, Fergus Ferguson
+Submission date: April 29, 2022
+
+To run the game:
+Run the file app.py (python3 app.py). Now that the server is running, 
+simply open the file index.html in any browser to start playing. 
+Opening a new browser window will allow you to play as another player. 
