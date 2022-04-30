@@ -2,6 +2,25 @@ Team Name: MangoTango!
 Members: Joy Ho, Ian Chang, Fergus Ferguson
 Submission date: April 29, 2022
 
+Files:
+
+app.py
+Runs the websockets server and facilitates message sending
+
+script.js
+Handles client side code and input parsing
+
+Dungeon.py
+Combines all components to build game dungeon, and processes
+information as necessary on the backend. Passes information
+to app.py to be sent to clients.
+
+Player.py, Enemy,py, Room.py
+Classes the handle information about game components.
+
+index.html, style.css
+For creating the frontend display to the user.
+
 To run the game:
 Run the file app.py (python3 app.py). Now that the server is running, 
 simply open the file index.html in any browser to start playing. 

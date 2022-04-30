@@ -269,7 +269,7 @@ async def server(websocket, path):
 
             # player wants to know who else is in the dungeon
             elif (command == "players"):
-                currentPlayers = dungeon.players()
+                currentPlayers = dungeon.getPlayers()
                 await websocket.send(f">>> {currentPlayers}")
 
             # player is restarting the game

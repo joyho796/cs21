@@ -117,7 +117,7 @@ class Dungeon:
                       Room("10", "08", None, None, None, [], [Enemy("Ooze", self.ENEMYDICT["Ooze"], ["Potion"])]), \
                       Room("11", "13", None, "03", "12", ["Potion", "Glaive"], []), \
                       Room("12", None, "11", None, None, [], [Enemy("Ooze", self.ENEMYDICT["Ooze"], ["Potion"])]),
-                      Room("13", None, None, "03", None, [], [Enemy("Dragon", self.ENEMYDICT["Dragon"], ["Potion"])])]
+                      Room("13", None, None, "11", None, [], [Enemy("Dragon", self.ENEMYDICT["Dragon"], ["Potion"])])]
 
 
     ##########################################################################
@@ -419,7 +419,8 @@ class Dungeon:
     ##########################################################################
     # Returns a list of all players in the dungeon
     ##########################################################################
-    def players(self):
+    def getPlayers(self):
+        print("sldfjs")
         output = "Players in dungeon are: "
         for player in self.players:
             output += player + ", "
