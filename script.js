@@ -7,7 +7,7 @@ window.addEventListener('load', function() {
     }
 
     // Create WebSocket connection.
-    const socket = new WebSocket('ws://localhost:5000');
+    const socket = new WebSocket('wss://dungeon-delvers-cs21.herokuapp.com/');
 
     userNameGiven = null;
     alive = true;
