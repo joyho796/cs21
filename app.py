@@ -1,6 +1,8 @@
 import sys
 sys.path.append("packages")
 import asyncio
+import signal
+import os
 import websockets
 from Dungeon import *
 import time, threading
@@ -313,9 +315,31 @@ async def server(websocket, path):
 
 
 # for connecting on local host
-start_server = websockets.serve(server, "localhost", 5000)
+# start_server = websockets.serve(server, "localhost", 5000)
 # for connecting on local network, replace IP
 # start_server = websockets.serve(server, IP, 5000)
 
-asyncio.get_event_loop().run_until_complete(start_server)
-asyncio.get_event_loop().run_forever()
+# asyncio.get_event_loop().run_until_complete(start_server)
+
+# asyncio.get_event_loop().run_forever()
+async def echo(websocket):
+    async for message in websocket:
+        await websocket.send(message)
+
+
+async def main():
+    # Set the stop condition when receiving SIGTERM.
+    loop = asyncio.get_running_loop()
+    stop = loop.create_future()
+    loop.add_signal_handler(signal.SIGTERM, stop.set_result, None)
+
+    async with websockets.serve(
+        echo,
+        host="",
+        port=int(os.environ["PORT"]),
+    ):
+        await stop
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
