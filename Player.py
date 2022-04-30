@@ -25,6 +25,11 @@ class Player:
     def takeDamage(self, amount):
         self.hp = self.hp - amount
 
+        if self.hp < 1:
+            return "dead"
+        else:
+            return "alive"
+
     def heal(self, amount):
         self.hp = self.hp + amount
 

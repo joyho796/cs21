@@ -10,6 +10,7 @@ window.addEventListener('load', function() {
     const socket = new WebSocket('ws://localhost:5000');
 
     userNameGiven = null;
+    alive = true;
 
     // Connection opened
     socket.addEventListener('open', function (event) {
@@ -38,21 +39,29 @@ window.addEventListener('load', function() {
         parsedMessage = outgoingMessage.toLowerCase().split(" ");
 
         if (userNameGiven == null) {
-            userNameGiven = outgoingMessage.replace(/\s/g, "");
-            document.getElementById('name').innerHTML = outgoingMessage.replace(/\s/g, "") + "@dungeon_crawl: ~$&nbsp"
             outgoingMessage = "name " + outgoingMessage.replace(/\s/g, "");
+        } else if (alive == false) {
+            if (parsedMessage[0] == "restart") {
+                outgoingMessage = "restart"
+            } else {
+                return false
+            }
         } else if (parsedMessage[0] == "help") {
             logInfo(">>> === Available Commands ===")
             logInfo(">>> self : check your HP, equipped weapon, and inventory")
-            logInfo(">>> attack [enemy/player name] : attack ")
+            logInfo(">>> attack : attack an enemy. ")
+            logInfo(">>> attack [player name] : attack a player.")
             logInfo(">>> chat [message] : send a message to all the other players")
             logInfo(">>> drink : drink a potion to heal your HP")
             logInfo(">>> equip [weapon name] : equip a different weapon")
             logInfo(">>> get [item name] : pick up an item")
             logInfo(">>> give [item name] : pick up an item")
-            logInfo(">>> info [player name] [item name] : learn more about an item")
+            logInfo(">>> info [item name] : learn more about an item")
             logInfo(">>> look: get information about the room you're in")
             logInfo(">>> move [north, east, south, west] : move to another room")
+            logInfo(">>> players : get list of players in the dungeon")
+            logInfo(">>> restart : restart the game")
+            logInfo(">>> ===")
             return false;
         }
 
@@ -70,6 +79,13 @@ window.addEventListener('load', function() {
             let messageElem = document.createElement('div');
             messageElem.textContent = message;
             document.getElementById('messages').prepend(messageElem);
+        } else if (messageParsed[0] == "dead") {
+            alive = false
+        } else if (messageParsed[0] == "nameTaken") {
+            userNameGiven = null;
+        } else if (messageParsed[0] == "validName") {
+            userNameGiven = messageParsed[1];
+            document.getElementById('name').innerHTML = messageParsed[1] + "@dungeon_crawl: ~$&nbsp"
         }
     }
 

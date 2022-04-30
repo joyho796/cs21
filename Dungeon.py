@@ -1,3 +1,8 @@
+##########################################################################
+# Class: Dungeon
+# Used to manage the setup and current state of the dungeon.
+##########################################################################
+
 from Room import *
 from Enemy import *
 from Player import *
@@ -30,6 +35,12 @@ class Dungeon:
             "maxRoll" : 15,
             "isWeapon" : True
         },
+        "Glaive" : {
+            "description" : "A polearm with an elegant blade affixed to the end. While beautiful, it looks deadly.",
+            "minRoll" : 20,
+            "maxRoll" : 30,
+            "isWeapon" : True
+        },
         "Potion" : {
             "description" : "A healing potion. It says healing on the red bottle, so it should be fine, right?",
             "minRoll" : 15,
@@ -50,9 +61,47 @@ class Dungeon:
             "maxDamage" : 20,
             "minDamage" : 15,
             "hp" : 30
+        },
+        "RatSwarm" : {
+            "description" : "A seething mass of rats. Ew",
+            "maxDamage" : 10,
+            "minDamage" : 5,
+            "hp" : 30
+        },
+        "Skeleton" : {
+            "description" : "The shambling, yellowing remains of what might have once been another adventurer.",
+            "maxDamage" : 25,
+            "minDamage" : 10,
+            "hp" : 45
+        },
+        "Dragon" : {
+            "description" : "A colossal red beast snorting flames from its nostrils.",
+            "maxDamage" : 50,
+            "minDamage" : 10,
+            "hp" : 30
         }
     }
 
+    ROOMDESCRIPTIONSDICT = {
+        "Entrance" : "This large room might once have been quite grand, with the fading murals on the walls and cracked pillars towering above you.",
+        "01" : "The remains of a wooden chair lie crumpled in the corner. It might have been nice to have a seat, if it wasn't broken.",
+        "02" : "A lovely moldering tapestry of a unicorn adorns the wall.",
+        "03" : "A rat scampers across the floor.",
+        "04" : "Something green drips down from the cieling.",
+        "05" : "The edges of the door in this room boast beautiful carved trim of vines and flowers.",
+        "06" : "Yellowing bones lie strewn across the floor, picked clean of flesh and skin.",
+        "07" : "Relief sculptures of lions stand proud of the corners of the room.",
+        "08" : "The walls appear blackened and scortched.",
+        "09" : "Someone did a shoddy job of the masonry in this room.",
+        "10" : "Broken glass covers the floor of this room. Tread carefully.",
+        "11" : "Unlike most other rooms, which are carved from life stone, this room is almost cave-like.",
+        "12" : "It smells weird in this room.",
+        "13" : "This giant room is flooded with gold and jewels; you can't see any floor at all."
+    }
+
+    ##########################################################################
+    # Constructor. Sets up the dungeon and its rooms.
+    ##########################################################################
     def __init__(self):
         self.players = {}
         self.rooms = [Room("Entrance", None, "06", None, "01", [], []), \
@@ -61,30 +110,20 @@ class Dungeon:
                       Room("03", "11", "04", None, "02", ["Dagger"], [Enemy("Grunt", self.ENEMYDICT["Grunt"], ["Potion"])]), \
                       Room("04", None, "05", "06", "03", ["Potion"], [Enemy("Grunt", self.ENEMYDICT["Grunt"], ["Sword"])]), \
                       Room("05", None, None, None, "04", ["Potion", "Sword"], [Enemy("Ooze", self.ENEMYDICT["Ooze"], ["Sword"])]), \
-                      Room("06", "04", None, "07", "Entrance", [], [Enemy("Grunt", self.ENEMYDICT["Grunt"], ["Potion"])]), \
-                      Room("07", "06", None, None, None, [], [Enemy("Grunt", self.ENEMYDICT["Grunt"], ["Sword"])]), \
+                      Room("06", "04", None, "07", "Entrance", [], [Enemy("RatSwarm", self.ENEMYDICT["RatSwarm"], ["Potion"])]), \
+                      Room("07", "06", None, None, None, [], [Enemy("Grunt", self.ENEMYDICT["Grunt"], ["Glaive"])]), \
                       Room("08", "01", "09", "10", None, ["Dagger"], []), \
-                      Room("09", None, None, None, "08", [], [Enemy("Ooze", self.ENEMYDICT["Ooze"], ["Potion"])]), \
+                      Room("09", None, None, None, "08", [], [Enemy("Skeleton", self.ENEMYDICT["Skeleton"], ["Potion"])]), \
                       Room("10", "08", None, None, None, [], [Enemy("Ooze", self.ENEMYDICT["Ooze"], ["Potion"])]), \
-                      Room("11", "13", None, "03", "12", ["Potion", "Sword"], []), \
+                      Room("11", "13", None, "03", "12", ["Potion", "Glaive"], []), \
                       Room("12", None, "11", None, None, [], [Enemy("Ooze", self.ENEMYDICT["Ooze"], ["Potion"])]),
-                      Room("13", None, None, "03", None, [], [Enemy("Ooze", self.ENEMYDICT["Ooze"], ["Potion"])])]
+                      Room("13", None, None, "03", None, [], [Enemy("Dragon", self.ENEMYDICT["Dragon"], ["Potion"])])]
 
-
-    def getIntro(self):
-        with open('introASCII.text') as f:
-            lines = f.readlines()
-
-        output = []
-
-        for line in lines:
-            #output.append(line)
-            output.append(line.replace(" ", "&nbsp;"))
-
-        return output
 
     ##########################################################################
-    # Given the name of a room, returns its index in the room array
+    # Takes: string (room name)
+    # Returns: int (room index)
+    # Does: Given the name of a room, returns its index in the room array
     ##########################################################################
     def getRoomIndex(self, room):
         if (room == "Entrance"):
@@ -93,24 +132,31 @@ class Dungeon:
             return int(room)
 
     ##########################################################################
-    # Adds a player to the dungeon. By default, players start in the Entrance
-    # (room 0)
+    # Takes: string (username)
+    # Returns: None
+    # Does: Adds a player to the dungeon. By default, players start in the
+    # Entrance (room 0)
     ##########################################################################
     def addPlayer(self, username):
         self.players[username] = Player(username)
         self.rooms[0].addPlayer(username)
 
     ##########################################################################
-    # Removes a player from the dungeon.
+    # Takes: string (username)
+    # Returns: None
+    # Does: Removes a player from the dungeon.
     ##########################################################################
     def removePlayer(self, username):
-        roomIndex = self.players[username].getRoomNumber()
-        self.rooms[roomIndex].removePlayer(username)
-        del self.players[username]
+        if (username in self.players.keys()):
+            roomIndex = self.players[username].getRoomNumber()
+            self.rooms[roomIndex].removePlayer(username)
+            del self.players[username]
 
 
     ##########################################################################
-    # Determines if player and enemy are in the same room.
+    # Takes: string (room name)
+    # Returns: boolean
+    # Does: Determines if there are players and enemies in the same room.
     ##########################################################################
     def playerAndEnemyInRoom(self, roomName):
         roomIndex = self.getRoomIndex(roomName)
@@ -123,7 +169,9 @@ class Dungeon:
 
 
     ##########################################################################
-    # If there are players and enemies in the same room, selects a random
+    # Takes: string (room name)
+    # Returns: [string, string, int] (username, enemy name, damage amount)
+    # Does:If there are players and enemies in the same room, selects a random
     # enemy to attack a random player.
     ##########################################################################
     def attackPlayerInRoom(self, roomName):
@@ -137,14 +185,33 @@ class Dungeon:
         minDmg = self.ENEMYDICT[enemy.Name]["minDamage"]
         attackDmg = random.randint(minDmg, maxDmg)
 
-        self.players[player].takeDamage(attackDmg)
+        state = self.players[player].takeDamage(attackDmg)
 
-        return [player, enemy.Name, attackDmg]
+        return [player, enemy.Name, attackDmg, state]
 
-##############################################################################
 
     ##########################################################################
-    #
+    # Takes: string (user name)
+    # Returns: boolean
+    # Does: Determines if a given player is in the dungeon
+    ##########################################################################
+    def isPlayerInDungeon(self, name):
+        return name in self.players.keys()
+
+
+    ##########################################################################
+    ##########################################################################
+    ## Start of section containing functions that respond to message prompts
+    ## from the server
+    ##########################################################################
+    ##########################################################################
+
+
+    ##########################################################################
+    # Takes: string, string (username, username)
+    # Returns: list
+    # Does: Allows a player to attack an entity in a room, either an enemy or
+    # another player.
     ##########################################################################
     def attack(self, player, target):
         room = self.rooms[self.players[player].room]
@@ -171,12 +238,18 @@ class Dungeon:
 
         # player wants to attack other player
         elif (target in self.players.keys()):
-            self.players[target].takeDamage(attackDmg)
-            return [room, attackDmg, target]
+            state = self.players[target].takeDamage(attackDmg)
+            return [room, attackDmg, target, state, "player"]
 
         return ["Target given not in room."]
 
 
+
+    ##########################################################################
+    # Takes: string (user name), string (item name)
+    # Returns: string (result)
+    # Does: Allows a user to drink a potion
+    ##########################################################################
     def drink(self, player, item):
         item = item.capitalize()
 
@@ -191,10 +264,16 @@ class Dungeon:
             return "You don't have any potions."
 
 
+    ##########################################################################
+    # Takes: string (user name), string (item name)
+    # Returns: string (result)
+    # Does: Allows a user to change their current weapon
+    ##########################################################################
     def equip(self, player, item):
         item = item.capitalize()
 
         if (item in self.ITEMDICT and item != "Potion"):
+            # makes sure they have the weapon they want to equip
             if item in self.players[player].weapons:
                 self.players[player].currentWeapon = item
                 return item + " equipped as weapon."
@@ -205,7 +284,9 @@ class Dungeon:
 
 
     ##########################################################################
-    # Adds a given item from the player's current room to their inventory,
+    # Takes: string, string (username, item name)
+    # Returns: string
+    # Does: Adds a given item from the player's current room to their inventory,
     # if said item is in the room.
     ##########################################################################
     def get(self, player, item):
@@ -227,9 +308,15 @@ class Dungeon:
             return "Item not recognized."
 
 
+    ##########################################################################
+    # Takes: string (user name), string (user name), string (item name)
+    # Returns: [string, boolean] (result, whether trade was successful)
+    # Does: Allows a user to handoff one item to another user
+    ##########################################################################
     def give(self, player, target, item):
         item = item.capitalize()
 
+        # if player cannot give item
         if not(item in self.ITEMDICT):
             return ["Item not recognized.", False]
         elif not((item in self.players[player].weapons) or (item in self.players[player].potions)):
@@ -237,6 +324,7 @@ class Dungeon:
 
         room = self.rooms[self.players[player].room]
 
+        # if indended recipient is not in room
         if (target in self.players.keys()):
             if target in room.players:
                 self.players[player].removeItem(item)
@@ -250,28 +338,35 @@ class Dungeon:
 
 
     ##########################################################################
-    # Returns information about a given item.
+    # Takes: string (item name)
+    # Returns: string (item/enemy description)
+    # Does: Returns information about a given item or enemy.
     ##########################################################################
     def info(self, item):
         item = item.capitalize()
 
         if (item in self.ITEMDICT):
             return self.ITEMDICT[item]["description"]
+        elif (item in self.ENEMYDICT):
+            return self.ENEMYDICT[item]["description"]
         else:
-            return "Given item not recognized."
+            return "Given item/enemy not recognized."
 
 
     ##########################################################################
-    # Returns information about a given room.
+    # Takes: string (username)
+    # Returns: list strings (room description)
+    # Does: Returns information about a given room.
     ##########################################################################
     def look(self, player):
         room = self.rooms[self.players[player].room]
 
-        desc = []
+        desc = ["==="]
         desc.append("Players present: " + str(len(room.players)))
         desc.append("Enemies present: " + room.getEnemies())
         desc.append("Items present: " + room.getItems())
         desc.append("Rooms adjacent: " + str(room.countAdjacent()))
+        desc.append("Description: " + self.ROOMDESCRIPTIONSDICT[room.roomName])
         desc.append("=== Room " + room.roomName + " ===")
         # This would be a list of strings sent back to the player
         return(desc)
@@ -333,6 +428,9 @@ class Dungeon:
 
         return output
 
+    ##########################################################################
+    # Returns a list of all players in the dungeon
+    ##########################################################################
     def self(self, player):
         player = self.players[player]
         return str(player.hp) + ". " + player.currentWeapon + ". " + player.getInventory()
