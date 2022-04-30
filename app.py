@@ -7,11 +7,16 @@ import time, threading
 
 connected = set()
 clients = {} # websocket: name
-threads = {} # room: thread
+threads = {} # room: thread -- used to make sure we only have one thread per room
 dungeon = Dungeon()
 
-lockRoomStates = threading.Lock()
+lockRoomStates = threading.Lock() # used to avoid race conditions
 
+
+##########################################################################
+# Takes: string (name)
+# Does: Finds the websocket address associated with a given username.
+##########################################################################
 def getSocketByUsername(userName):
     userNames = list(clients.values())
     index = userNames.index(userName)
@@ -20,6 +25,11 @@ def getSocketByUsername(userName):
 
     return socket
 
+##########################################################################
+# Takes: websocket, string (name)
+# Does: Adds a user to the dungeon, so long as the name given is not already
+# in use.
+##########################################################################
 async def addUser(websocket, name):
     userNames = list(clients.values())
     if name in userNames:
@@ -38,11 +48,17 @@ async def addUser(websocket, name):
         dungeon.addPlayer(name)
 
 
+##########################################################################
+# Takes: string (room name)
+# Does: As long as there are both a player and an enemy in a given room,
+# a random enemy will attack a random player in the room ever 3 seconds.
+##########################################################################
 async def attackPlayer(room):
     enemyAttack = dungeon.playerAndEnemyInRoom(room)
 
     while enemyAttack:
         lockRoomStates.acquire()
+        # if there is at least one player and enemy in the room
         if dungeon.playerAndEnemyInRoom(room):
             result = dungeon.attackPlayerInRoom(room)
 
@@ -66,15 +82,21 @@ async def attackPlayer(room):
         lockRoomStates.release()
         time.sleep(3)
 
+    # remove thread from the dict of threads
     if (room in threads.keys()):
         del threads[room]
 
 
-# player wants to attack an enemy in the room
+##########################################################################
+# Takes: websocket, string (target)
+# Does: Allows player to try to attack an entiry in their current room.
+# Player may either try to attack another player or a random enemy in the
+# room.
+##########################################################################
 async def attack(websocket, target):
     results = dungeon.attack(clients[websocket], target)
 
-
+    # if player attacked another player
     if (len(results) == 5):
         victim = getSocketByUsername(results[2])
         for conn in connected:
@@ -95,6 +117,7 @@ async def attack(websocket, target):
 
             if results[3] == "dead":
                 dungeon.removePlayer(results[2])
+    # if player attacked a dungeon enemy
     elif len(results) > 1:
         for conn in connected:
             if conn != websocket:
@@ -119,6 +142,11 @@ async def chat(websocket, message):
             await conn.send(f">>> You: {message} ")
 
 
+##########################################################################
+# Takes: websocket, string (user name), string (item name)
+# Does: Allows a user to try to give an item in their inventory to another
+# player.
+##########################################################################
 async def give(websocket, target, item):
     result = dungeon.give(clients[websocket], target, item)
     if (len(result) != 1):
@@ -131,6 +159,10 @@ async def give(websocket, target, item):
                 await conn.send(f">>> You gave {target} a(n) {item}. ")
 
 
+##########################################################################
+# Takes: websocket, string (direction)
+# Does: Allows a user to try to move to another room.
+##########################################################################
 async def move(websocket, direction):
     result = dungeon.move(clients[websocket], direction)
 
@@ -138,6 +170,10 @@ async def move(websocket, direction):
         await websocket.send(f">>> {result[0]}")
     else:
         enemyAttack = dungeon.playerAndEnemyInRoom(result[1])
+        # if there is now an enemy and player in the same room, we want to make a thread
+        # where the enemy attacks the player so long as they are in the room.
+        # we use the threads dictionary to make sure there is only one such thread
+        # per room.
         if enemyAttack and (not(result[1] in threads.keys())):
             thread = threading.Thread(target=asyncio.run, args=(attackPlayer(result[1]), ))
             thread.start()
@@ -148,6 +184,9 @@ async def move(websocket, direction):
                 await conn.send(f">>> You moved {direction} from room {result[0]} to room {result[1]}. ")
 
 
+##########################################################################
+# Message handler.
+##########################################################################
 async def server(websocket, path):
     # Register.
     connected.add(websocket)
@@ -272,8 +311,10 @@ async def server(websocket, path):
             del clients[websocket]
 
 
+# for connecting on local host
 start_server = websockets.serve(server, "localhost", 5000)
-#start_server = websockets.serve(server, "169.254.219.144", 5000)
+# for connecting on local network, replace IP
+# start_server = websockets.serve(server, IP, 5000)
 
 asyncio.get_event_loop().run_until_complete(start_server)
 asyncio.get_event_loop().run_forever()

@@ -1,4 +1,9 @@
-import time
+##########################################################################
+# Class: Room
+# Used to keep track items, players, and enemies in the room, as well as
+# any connecting rooms.
+##########################################################################
+
 class Room:
     def __init__(self, roomName, north, east, south, west, items, enemies):
         self.roomName = roomName

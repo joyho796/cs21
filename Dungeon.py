@@ -62,7 +62,7 @@ class Dungeon:
             "minDamage" : 15,
             "hp" : 30
         },
-        "RatSwarm" : {
+        "Rat_swarm" : {
             "description" : "A seething mass of rats. Ew",
             "maxDamage" : 10,
             "minDamage" : 5,
@@ -78,7 +78,7 @@ class Dungeon:
             "description" : "A colossal red beast snorting flames from its nostrils.",
             "maxDamage" : 50,
             "minDamage" : 10,
-            "hp" : 30
+            "hp" : 60
         }
     }
 
@@ -110,7 +110,7 @@ class Dungeon:
                       Room("03", "11", "04", None, "02", ["Dagger"], [Enemy("Grunt", self.ENEMYDICT["Grunt"], ["Potion"])]), \
                       Room("04", None, "05", "06", "03", ["Potion"], [Enemy("Grunt", self.ENEMYDICT["Grunt"], ["Sword"])]), \
                       Room("05", None, None, None, "04", ["Potion", "Sword"], [Enemy("Ooze", self.ENEMYDICT["Ooze"], ["Sword"])]), \
-                      Room("06", "04", None, "07", "Entrance", [], [Enemy("RatSwarm", self.ENEMYDICT["RatSwarm"], ["Potion"])]), \
+                      Room("06", "04", None, "07", "Entrance", [], [Enemy("Rat_swarm", self.ENEMYDICT["Rat_swarm"], ["Potion"])]), \
                       Room("07", "06", None, None, None, [], [Enemy("Grunt", self.ENEMYDICT["Grunt"], ["Glaive"])]), \
                       Room("08", "01", "09", "10", None, ["Dagger"], []), \
                       Room("09", None, None, None, "08", [], [Enemy("Skeleton", self.ENEMYDICT["Skeleton"], ["Potion"])]), \
@@ -345,9 +345,9 @@ class Dungeon:
     def info(self, item):
         item = item.capitalize()
 
-        if (item in self.ITEMDICT):
+        if (item in self.ITEMDICT.keys()):
             return self.ITEMDICT[item]["description"]
-        elif (item in self.ENEMYDICT):
+        elif (item in self.ENEMYDICT.keys()):
             return self.ENEMYDICT[item]["description"]
         else:
             return "Given item/enemy not recognized."

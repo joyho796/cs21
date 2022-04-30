@@ -1,3 +1,8 @@
+##########################################################################
+# Class: Player
+# Used to keep track of player stats, inventory, and location.
+##########################################################################
+
 class Player:
     def __init__(self, username):
         self.username = username
@@ -8,9 +13,11 @@ class Player:
         self.currentWeapon = "Knife"
 
 
+    # add a weapon to inventory
     def addWeapon(self, weaponName):
         self.weapons.append(weaponName)
 
+    # remove item from inventory
     def removeItem(self, item):
         if item in self.weapons:
             if self.currentWeapon == item:
@@ -19,9 +26,12 @@ class Player:
         elif item in self.potions:
             self.potions.remove(item)
 
+    # add potion to inventory
     def addPotion(self, potionName):
         self.potions.append(potionName)
 
+    # subtrack given damage amount from hp. Returns whether the player is
+    # dead or alive as a result.
     def takeDamage(self, amount):
         self.hp = self.hp - amount
 
@@ -30,12 +40,15 @@ class Player:
         else:
             return "alive"
 
+    # gain a given amount of hp
     def heal(self, amount):
         self.hp = self.hp + amount
 
+    # get the player's current location in the dungeon.
     def getRoomNumber(self):
         return self.room
 
+    # returns the players current inventory
     def getInventory(self):
         weaponsList = "Weapons: "
         potionsList = "Potions: "
